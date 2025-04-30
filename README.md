@@ -1,87 +1,123 @@
-# -Gazebo-Simulator-for-Cooperative-Costmap
+# Obstacle Influence Costmap Framework
 
-# my_custom_layers
+### This module is designed for use with ROS 2 Humble and the Navigation2 stack.
+It has been tested in multi-AMR environments using ROS 2 Humble on Ubuntu 22.04 with standard Nav2 navigation behavior.
 
-A Custom CSV-Based Costmap Layer Plugin for ROS 2 Navigation2
+### This repository provides two ROS 2 packages for cooperative navigation in multi-robot environments:
 
-This repository provides a Nav2 costmap plugin that dynamically updates the costmap based on CSV data published over a ROS 2 topic.
-
----
-
-## Project Structure
-
-my_custom_layers/
-├── CMakeLists.txt # Build instructions
-├── package.xml # Package manifest
-├── plugin.xml # Plugin description (pluginlib)
-├── include/
-│ └── my_custom_layers/
-│ └── my_csv_layer.hpp # Layer interface definition
-└── src/
-└── my_csv_layer.cpp # Layer implementation
+- **`my_custom_layers`**: A Nav2 plugin layer that integrates real-time costmap data via CSV messages.
+- **`obstacle_influence`**: A runtime path-monitoring module that detects blocked regions and shares their influence with other robots.
 
 ---
 
-## Key Features
+## Package 1: `my_custom_layers`
 
-- **Real-Time Topic-Driven Costs**  
-  Subscribes to `obstacle_influence::msg::CSVData` to receive (x, y, cost) tuples and apply them to the costmap immediately.
+### Overview
 
-- **Enable/Disable Control**  
-  Toggle layer activation via the `my_csv_layer.enabled` parameter or at runtime through incoming messages.
+`my_custom_layers` implements `MyCSVLayer`, a plugin for the Nav2 costmap. It dynamically integrates external cost data received as CSV-formatted messages via a ROS 2 topic.
 
-- **Global Coordinate Updates**  
-  Applies cost updates in world coordinates, independent of the robot’s current pose.
+### Features
 
-- **Safe Concurrency**  
-  Uses mutex locks to guarantee thread-safe updates of the shared costmap.
+- Implements `nav2_costmap_2d::Layer`
+- Subscribes to `obstacle_influence/msg/CSVData`
+- Applies region-specific cost updates efficiently
+- Fully compatible with pluginlib
 
-- **Pluginlib Integration**  
-  Dynamically loaded by Navigation2’s `nav2_costmap_2d` via pluginlib for seamless integration.
+### Build Instructions
 
----
-
-## Installation
-
-**Prerequisites:**
-
-- ROS 2 Humble  
-- Navigation2 (`nav2_costmap_2d`)  
-- `pluginlib`  
-- `obstacle_influence` message package  
-
-**Steps:**
-1. Source ROS 2
-source /opt/ros/humble/setup.bash
-
-2. Clone into your workspace
-mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
-git clone <your_repo_url> my_custom_layers
-
-3. Build and source
-cd ~/ros2_ws
-colcon build --symlink-install
+```bash
+cd ~/your_ros2_ws/src
+git clone <this_repository>
+cd ~/your_ros2_ws
+colcon build --packages-select my_custom_layers
 source install/setup.bash
+```
 
+### Plugin Configuration
+
+Add the following to your `nav2_params.yaml`:
+
+```yaml
+local_costmap:
+  plugins: ["static_layer", "inflation_layer", "my_csv_layer"]
+
+my_csv_layer:
+  plugin: "my_custom_layers::MyCSVLayer"
+  enabled: true
+  topic: "/online1"
+```
+
+---
+
+## Package 2: `obstacle_influence`
+
+### Overview
+
+`obstacle_influence` monitors robot navigation to detect blocked paths and activates costmap influence in shared regions. It publishes `CSVData` messages, which can be consumed by Nav2 plugins such as `MyCSVLayer`.
+
+### Nodes
+
+- **`blocked_path_publisher`**: Detects path blockage based on robot behavior and activates CSV-based costmap regions.
+- **`partition_monitor`**: Observes robot poses and goals to detect inter-partition transitions and trigger influence activation.
+
+### Custom Messages
+
+Located in the `msg/` directory:
+
+- `CSVPoint.msg`: Contains `x`, `y`, and `cost`
+- `CSVData.msg`: Contains a `bool enabled` flag and a list of `CSVPoint`
+
+###  Run Instructions
+
+```bash
+ros2 run obstacle_influence blocked_path_publisher
+ros2 run obstacle_influence partition_monitor
+```
+
+Make sure your `csv/` folder contains the appropriate `cost*.csv` files for region-specific influence.
+
+---
+
+## Summary
+
+This system enables **adaptive costmap updates** in response to dynamically detected obstacles by other robots.  
 
 
 ---
 
-## How to Run
+## Folder Structure
 
-1. **Configure Your Costmap YAML**  
-   Add the plugin entry under your costmap’s `plugins` section:
+```
+.
+├── my_custom_layers/
+│   ├── src/my_csv_layer.cpp
+│   ├── include/my_csv_layer.hpp
+│   ├── plugin.xml
+│   ├── CMakeLists.txt
+│   └── package.xml
+├── obstacle_influence/
+│   ├── obstacle_influence/
+│   │   ├── blocked_path_publisher.py
+│   │   └── partition_monitor.py
+│   ├── csv/
+│   ├── msg/
+│   │   ├── CSVPoint.msg
+│   │   └── CSVData.msg
+│   ├── setup.py
+│   ├── CMakeLists.txt
+│   └── package.xml
+```
 
-costmap:
-plugins:
-- name: my_csv_layer
-type: "my_custom_layers::MyCSVLayer"
+---
 
+## License
 
+This code is made available for academic purposes accompanying a manuscript submission to CoRL 2025.
 
-2. **Launch Navigation2**  
-Pass your costmap parameters file to the Nav2 bringup launch:
-ros2 launch nav2_bringup bringup_launch.py
-params_file:=<your_costmap_params>.yaml
+**Note: Unauthorized reproduction, distribution, or modification of this code is strictly prohibited.**
 
+© 2025 Anonymous Authors. All rights reserved.
+---
 
+## Contact
+If you have questions regarding the paper or this simulation framework, please refer to the official CoRL 2025 manuscript submission.
