@@ -1,0 +1,9 @@
+<library path="my_custom_layers">
+  <class name="my_custom_layers::MyCSVLayer"
+         type="my_custom_layers::MyCSVLayer"
+         base_class_type="nav2_costmap_2d::Layer">
+    <description>
+      A custom costmap layer that reads cost data from a CSV file.
+    </description>
+  </class>
+</library>
