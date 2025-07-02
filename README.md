@@ -120,4 +120,4 @@ This code is made available for academic purposes accompanying a manuscript subm
 ---
 
 ## Contact
-If you have questions regarding the paper or this simulation framework, please refer to the official CoRL 2025 manuscript submission.
+If you have questions regarding the paper or this simulation framework, please refer to the official JIII 2025 manuscript submission.
