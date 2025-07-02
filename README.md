@@ -112,7 +112,7 @@ This system enables **adaptive costmap updates** in response to dynamically dete
 
 ## License
 
-This code is made available for academic purposes accompanying a manuscript submission to CoRL 2025.
+This code is made available for academic purposes accompanying a manuscript submission to JIII.
 
 **Note: Unauthorized reproduction, distribution, or modification of this code is strictly prohibited.**
 
